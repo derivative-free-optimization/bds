@@ -15,7 +15,7 @@ function cycling_test(testcase)
 
 array = [1, 2, 3, 4, 5];
 % When index < 0, the array should remain unchanged.
-for strategy = 0:4
+for strategy = 0:3
     verifyEqual(testcase, cycling(array, -1, strategy), array)
 end
 % When strategy == 0, the array should remain unchanged.
@@ -95,9 +95,11 @@ end
 
 function output = eval_fun_tmp(x)
 if length(x) <= 100
-    output = NaN;
+    output = nan;
 elseif length(x) <= 200
     output = inf;
+elseif length(x) <= 300
+    output = 1e30;
 else
     error('The length of x is too large.');
 end
@@ -108,21 +110,31 @@ function eval_fun_test(testcase)
 
 n = randi([1, 100]);
 x = randn(n, 1);
-f_return = 1e30;
+f_return = inf;
 
-% When eval_fun processes NaN, it should return 1e30.
+% When eval_fun processes nan, it should be treated as an error, 
+% and eval_fun should print a warning and return inf. The warning message is not checked here.
 verifyEqual(testcase, eval_fun(@eval_fun_tmp, x), f_return);
 
 n = randi([101, 200]);
 x = randn(n, 1);
-f_return = 1e30;
+f_return = inf;
 
-% When eval_fun processes inf, it should return 1e30.
+% When eval_fun processes inf, it should return inf without printing a warning, as inf is not 
+% treated as an error.
 verifyEqual(testcase, eval_fun(@eval_fun_tmp, x), f_return)
 
 n = randi([201, 300]);
 x = randn(n, 1);
 f_return = 1e30;
+
+% When eval_fun processes a value that is large such as 1e30, it should return the same value 
+% without printing a warning, as it is not treated as an error.
+verifyEqual(testcase, eval_fun(@eval_fun_tmp, x), f_return)
+
+n = randi([301, 400]);
+x = randn(n, 1);
+f_return = inf;
 
 % When eval_fun processes an error, it will print a warning and return 1e30.
 % The warning message is not checked here.
@@ -132,13 +144,53 @@ end
 
 function get_default_constant_test(testcase)
 %GET_DEFAULT_CONSTANT_TEST tests the file private/get_default_constant.m.
-
 % The following tests verify the default values of parameters required by bds.
-% Some code repetition is expected. The test order matches the parameter order in 
-% get_default_constant.m. If any test fails, it indicates that a default parameter value 
-% has been modified.
+% Some code repetition is expected.
+% The test order matches the parameter order in get_default_constant.m.
+% If any test fails, it indicates that a default parameter value has been modified.
+
 constant_name = "MaxFunctionEvaluations_dim_factor";
 constant_value = 500;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "ftarget";
+constant_value = -inf;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "StepTolerance";
+constant_value = 1e-6;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "use_function_value_stop";
+constant_value = false;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "func_window_size";
+constant_value = 20;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "func_tol";
+constant_value = 1e-6;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "use_estimated_gradient_stop";
+constant_value = false;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "grad_window_size";
+constant_value = 1;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "grad_tol";
+constant_value = 1e-6;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "block_visiting_pattern";
+constant_value = "sorted";
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
+constant_name = "alpha_init";
+constant_value = 1;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
 constant_name = "ds_expand_small";
@@ -197,19 +249,15 @@ constant_name = "shrink_big_noisy";
 constant_value = 0.85;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
+constant_name = "is_noisy";
+constant_value = false;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
 % To ensure that the forcing function is a function handle, we use func2str to compare the function handles.
 assert(strcmp(func2str(get_default_constant("forcing_function")), func2str(@(alpha) alpha^2)));
 
 constant_name = "reduction_factor";
 constant_value = [0, eps, eps];
-verifyEqual(testcase, get_default_constant(constant_name), constant_value)
-
-constant_name = "StepTolerance";
-constant_value = 1e-6;
-verifyEqual(testcase, get_default_constant(constant_name), constant_value)
-
-constant_name = "alpha_init";
-constant_value = 1;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
 constant_name = "polling_inner";
@@ -218,14 +266,10 @@ verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
 constant_name = "cycling_inner";
 constant_value = 1;
-verifyEqual(testcase, get_default_constant(constant_name), constant_value);
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
 constant_name = "seed";
 constant_value = "shuffle";
-verifyEqual(testcase, get_default_constant(constant_name), constant_value)
-
-constant_name = "ftarget";
-constant_value = -inf;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
 constant_name = "output_xhist";
@@ -240,6 +284,10 @@ constant_name = "output_block_hist";
 constant_value = false;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
+constant_name = "output_grad_hist";
+constant_value = false;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
 constant_name = "iprint";
 constant_value = 0;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
@@ -248,25 +296,41 @@ constant_name = "debug_flag";
 constant_value = false;
 verifyEqual(testcase, get_default_constant(constant_name), constant_value)
 
+constant_name = "gradient_estimation_complete";
+constant_value = false;
+verifyEqual(testcase, get_default_constant(constant_name), constant_value)
+
 end
 
 function get_exitflag_test(testcase)
 %GET_EXITFLAG_TEST tests the file private/get_exitflag.m.
 
-information = "SMALL_ALPHA";
+information = "FTARGET_REACHED";
 EXITFLAG = 0;
 verifyEqual(testcase, get_exitflag(information), EXITFLAG)
 
-information = "FTARGET_REACHED";
+information = "MAXFUN_REACHED";
 EXITFLAG = 1;
 verifyEqual(testcase, get_exitflag(information), EXITFLAG)
 
-information = "MAXFUN_REACHED";
+information = "MAXIT_REACHED";
 EXITFLAG = 2;
 verifyEqual(testcase, get_exitflag(information), EXITFLAG)
 
-information = "MAXIT_REACHED";
+information = "SMALL_ALPHA";
 EXITFLAG = 3;
+verifyEqual(testcase, get_exitflag(information), EXITFLAG)
+
+information = "SMALL_OBJECTIVE_CHANGE";
+EXITFLAG = 4;
+verifyEqual(testcase, get_exitflag(information), EXITFLAG)
+
+information = "SMALL_ESTIMATE_GRADIENT";
+EXITFLAG = 5;
+verifyEqual(testcase, get_exitflag(information), EXITFLAG)
+
+information = "GRADIENT_ESTIMATION_COMPLETE";
+EXITFLAG = 6;
 verifyEqual(testcase, get_exitflag(information), EXITFLAG)
 
 end
@@ -316,7 +380,7 @@ D_unique = D(:, 1:2:2*n-1);
 % independent subset, sorting these indices ensures that the order of the vectors in the output matrix D 
 % is as consistent as possible with that in the input matrix A. This allows us to use isequal to verify 
 % that the odd columns of D are identical to the input matrix A. Note that get_direction_set does not alter 
-% the input matrix A unless collinearity, linear dependence, NaN, Inf, or very short columns are present.
+% the input matrix A unless collinearity, linear dependence, nan, Inf, or very short columns are present.
 % As previously discussed, the probability of such cases is negligible for random matrices with large n.
 % Therefore, we can reliably use isequal to confirm that the odd columns of D match the input matrix A.
 % We also need to check whether the odd columns of D equal to the even columns of D with a negative
@@ -339,10 +403,10 @@ if r ~= n
 end
 
 % The following tests evaluate the behavior of get_direction_set when the input matrix consists 
-% entirely of NaN values. The expected behavior is that get_direction_set should return a block 
+% entirely of nan values. The expected behavior is that get_direction_set should return a block 
 % diagonal matrix with 1 and -1.
 n = randi([1,100]);
-options.direction_set = NaN(n, n);
+options.direction_set = nan(n, n);
 D = [zeros(n) zeros(n)];
 for ii = 1:n
     D(ii, 2*ii-1) = 1;
@@ -411,7 +475,7 @@ function bds_test(testcase)
 
 % This test verifies the core functionality of the bds algorithm by checking its ability to
 % minimize the Chained Rosenbrock function. The bds.m is tested under various configurations, 
-% including different block_visiting_pattern, batch_size, and replacement_delay settings.
+% including different block_visiting_pattern, batch_size.
 % While the optimal function value returned by bds.m may vary slightly depending on these parameters, 
 % all results should be close to zero.
 x0 = zeros(3,1);
@@ -463,26 +527,13 @@ if abs(fopt) > 1e-8
     error('The function value is not close to 0.');
 end
 
-% Test the case where the batch_size is 3 and the replacement_delay is 0.
-options.replacement_delay = 0;
+% Test the case where the batch_size is 3 and the block_visiting_pattern is "sorted".
+options.block_visiting_pattern = "sorted";
 [~, fopt, ~, ~] = bds(@chrosen, x0, options);
 if abs(fopt) > 1e-8
     error('The function value is not close to 0.');
 end
 
-% Test the case where the batch_size is 3 and the replacement_delay is 1.
-options.replacement_delay = 1;
-[~, fopt, ~, ~] = bds(@chrosen, x0, options);
-if abs(fopt) > 1e-8
-    error('The function value is not close to 0.');
-end
-
-% Test the case where the batch_size is 3 and the replacement_delay is 2.
-options.replacement_delay = 2;
-if abs(fopt) > 1e-8
-    error('The function value is not close to 0.');
-end
-options = rmfield(options, 'replacement_delay');
 options = rmfield(options, 'batch_size');
 
 % Test the case where the block_visiting_pattern is "parallel" and the 

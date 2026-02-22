@@ -6,4 +6,4 @@ function isis = isintegerscalar(x)
 
 isis = isrealscalar(x) && (rem(x,1) == 0);
 
-end
+return

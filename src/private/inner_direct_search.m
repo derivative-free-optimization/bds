@@ -42,6 +42,7 @@ xopt = xbase;
 % This ensures that if the algorithm terminates early (e.g., by reaching ftarget after the first 
 % evaluation), sufficient_decrease remains well-defined and consistent with the algorithm's logic.
 sufficient_decrease = false;
+invalid_points = [];
 
 for j = 1 : num_directions
 
@@ -49,12 +50,15 @@ for j = 1 : num_directions
     xnew = xbase+alpha*D(:, j);
     % fnew_real is the real function value at xnew, which is the value returned by fun 
     % (not fnew).
-    [fnew, fnew_real] = eval_fun(fun, xnew);
+    [fnew, fnew_real, is_valid] = eval_fun(fun, xnew);
     nf = nf+1;
     % When we record the function value, we use the real function value.
     % Here, we should use fnew_real instead of fnew.
     fhist(nf) = fnew_real;
     xhist(:, nf) = xnew;
+    if ~is_valid
+        invalid_points = [invalid_points, xnew];
+    end
     if iprint >= 2
         fprintf("The %d-th block is currently being visited.\n", i_real);
         fprintf("The corresponding step size is:\n");
@@ -123,6 +127,7 @@ end
 % Truncate FHIST and XHIST into a vector of length nf.
 output.fhist = fhist(1:nf);
 output.xhist = xhist(:, 1:nf);
+output.invalid_points = invalid_points;
 output.nf = nf;
 output.direction_indices = direction_indices;
 output.terminate = terminate;

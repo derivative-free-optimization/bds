@@ -6,4 +6,4 @@ function isrs = isrealscalar(x)
 
 isrs = isnumeric(x) && isreal(x) && isscalar(x);
 
-end
+return

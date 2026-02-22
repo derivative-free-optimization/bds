@@ -11,5 +11,4 @@ else
     isrv = false;
     len = nan;
 end
-
-end
+return

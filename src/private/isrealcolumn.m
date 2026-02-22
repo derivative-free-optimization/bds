@@ -15,5 +15,4 @@ else
     isrc = false;
     len = nan;
 end
-
-end
+return

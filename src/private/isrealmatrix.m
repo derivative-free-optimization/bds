@@ -16,5 +16,4 @@ else
     m = nan;
     n = nan;
 end
-
-end
+return
