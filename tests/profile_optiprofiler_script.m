@@ -1,8 +1,8 @@
 clear all
 % options.dim = 'big';
-options.solver_names = {'fd-bfgs', 'pads'};
+options.solver_names = {'cbds-orig', 'cbds-orig-alpha-init'};
 options.mindim = 1;
-options.maxdim = 1;
+options.maxdim = 200;
 % options.feature_name = 'plain';
 % profile_optiprofiler(options);
 
