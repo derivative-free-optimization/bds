@@ -1498,6 +1498,7 @@ function x = cbds_orig_alpha_init_test(fun, x0)
     DeltaZero     = 1e-2;
 
     % Calculate Smart Alpha
+    n = numel(x0);
     alpha_vec = zeros(n, 1);
     for i = 1:n
         if x0(i) ~= 0
