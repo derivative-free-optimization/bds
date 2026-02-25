@@ -148,7 +148,7 @@ end
 if isfield(options, "StepTolerance")
     if isscalar(options.StepTolerance)
         options.StepTolerance = options.StepTolerance * ones(options.num_blocks, 1);
-    elseif length(options.StepTolerance) == options.num_blocks
+    elseif isnumvec(options.StepTolerance) && length(options.StepTolerance) == options.num_blocks
         options.StepTolerance = options.StepTolerance(:);
     else
         error('BDS:set_options:InvalidStepToleranceLength', ...
@@ -187,9 +187,13 @@ end
 
 % Set the initial step sizes.
 % If options do not contain the field of alpha_init, then the initial step size of each block is set
-% to 1. If alpha_init is a positive scalar, then the initial step size of each block is set to 
-% alpha_init. If alpha_init is a vector, then the initial step size of the i-th block is set to 
-% alpha_init(i). If alpha_init is "auto", then the initial step size is derived from x0 by using
+% to 1. 
+% If alpha_init is a positive scalar, then the initial step size of each block is set to 
+% alpha_init. 
+% If alpha_init is a vector, then the initial step size of the i-th block is set to 
+% alpha_init(i). We first verify it is a numeric vector to avoid accepting strings that happen
+% to have the same length (for example, 'auto' when num_blocks = 4).
+% If alpha_init is "auto", then the initial step size is derived from x0 by using
 % max(abs(x0(i)), options.StepTolerance(i)) for each coordinate, with 1 used when x0(i) = 0.
 % This option assumes the default direction set [e_1, -e_1, ..., e_n, -e_n], ordered by
 % coordinates 1, 2, ..., n, with [e_i, -e_i] treated as one block.
@@ -198,21 +202,6 @@ if isfield(options, "alpha_init")
         options.alpha_init = options.alpha_init * ones(options.num_blocks, 1);
     elseif isnumvec(options.alpha_init) && (length(options.alpha_init) == options.num_blocks)
         options.alpha_init = options.alpha_init(:);
-    % elseif strcmpi(options.alpha_init, "auto")
-    %     % Calculate Smart Alpha
-    %     alpha_vec = zeros(n, 1);
-    %     for i = 1:n
-    %         if x0(i) ~= 0
-    %             alpha_vec(i) = max(abs(x0(i)), 1e-6);
-    %         else
-    %             alpha_vec(i) = 1;
-    %         end
-    %     end
-    %     options.alpha_init = alpha_vec;
-    % else
-    %     error('BDS:set_options:InvalidAlphaInitLength', ...
-    %         'Length of options.alpha_init must match options.num_blocks if it is a vector.');
-    % end
     elseif strcmpi(options.alpha_init, "auto")
             % Calculate Smart Alpha
             alpha_vec = zeros(n, 1);
